@@ -1,0 +1,14 @@
+standalone.py
+standalone.enc
+standalone_double.enc
+encryption.key
+step1_generate_key.py
+step2_encrypt_app.py
+step3_double_encrypt.py
+encode_url.py
+GITHUB_DEPLOY_GUIDE.md
+ULTRA_SECURE_GUIDE.md
+DEPLOY_GUIDE.md
+*.pyc
+__pycache__/
+1.png
