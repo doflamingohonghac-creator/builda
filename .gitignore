@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local files
+*.log
+.DS_Store
+
+# Don't commit these (keep local)
+source_code.py
+longbuilda_decoded.py
+encrypt_to_bin.py
