@@ -1,6 +1,7 @@
 from kivy.app import App
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.slider import Slider
+from kivy.uix.textinput import TextInput
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
@@ -46,6 +47,7 @@ class LongBuildaApp(App):
         self.paste_count = 0
         self.config_data = {"zoom": 100, "off_x": 0, "off_y": 0, "rotation": 0}
         self.fps_label_text = "FPS: --"
+        self.preview_temp = "/storage/emulated/0/Download/.preview_temp.png"
 
         self.root_container = FloatLayout()
 
@@ -59,12 +61,22 @@ class LongBuildaApp(App):
 
         self.main_layout = BoxLayout(orientation='vertical', size_hint=(1, 1))
 
+        # Header tạo riêng, sẽ add vào overlay sau
         self.header = BoxLayout(orientation='vertical', size_hint_y=0.12, padding=[0, 10])
-        self.header.add_widget(Label(text="[b][color=00ffff]HONGHAC BUILDA[/color][/b]", markup=True, font_size='24sp', halign='center'))
-        self.header.add_widget(Label(text="[color=ffffff]Tải tool free tại https://konect.gg/hacnewsgame - discord : honghac.[color=ff0000[/color][/color]", markup=True, font_size='13sp', halign='center'))
-        self.main_layout.add_widget(self.header)
+        self.header.add_widget(Label(text="[b][color=#800080]HONGHAC BUILDA[/color][/b]", markup=True, font_size='24sp', halign='center'))
+        self.header.add_widget(
+            Label(
+                text="[color=ffffff]>> Download FREE: [color=00ffff]https://konect.gg/hacnewsgame[/color]\n"
+                     ">> Discord: [color=ff66ff]honghac.[/color] | "
+                     ">> YouTube: [color=ffcc00]HongHac x Gamer[/color][/color]",
+                markup=True,
+                font_size='13sp',
+                halign='center'
+            )
+        )
+        self.main_layout.add_widget(self.header)  # Add vào main_layout như cũ
 
-        self.view_zone = FloatLayout(size_hint_y=0.53)
+        self.view_zone = FloatLayout(size_hint_y=0.583)  # Tăng 10%: 0.53 * 1.1 = 0.583
         with self.view_zone.canvas.before:
             self.frame_color = Color(0, 0, 0, 1) 
             self.frame_bg = Rectangle(pos=(0,0), size=(0,0))
@@ -106,16 +118,41 @@ class LongBuildaApp(App):
         
         self.main_layout.add_widget(self.view_zone)
 
-        # Rotation Panel
+        # Rotation Panel - TextInput + Up/Down buttons
         self.rotation_panel = BoxLayout(orientation='horizontal', size_hint_y=0.08, padding=[15, 5], spacing=10)
-        rotation_label = Label(text="[b]XOAY:[/b]", markup=True, size_hint_x=0.15, font_size='14sp')
-        self.rotation_slider = Slider(min=0, max=360, value=0, step=1, size_hint_x=0.6, cursor_size=(20, 20))
-        self.rotation_value_label = Label(text="[color=ffff00][b]0°[/b][/color]", markup=True, size_hint_x=0.15, font_size='16sp')
-        reset_btn = NutNeon(text="RESET", size_hint_x=0.1, bg_color=(0.5, 0.1, 0.1, 0.8), border_color=(1, 0.3, 0.3, 1))
-        self.rotation_slider.bind(value=self.on_rotation_change)
+        rotation_label = Label(text="[b]XOAY:[/b]", markup=True, size_hint_x=0.12, font_size='14sp')
+        
+        # TextInput for rotation value
+        self.rotation_input = TextInput(
+            text='0',
+            multiline=False,
+            input_filter='int',
+            size_hint_x=0.15,
+            font_size='16sp',
+            halign='center',
+            background_color=(0.1, 0.1, 0.15, 1),
+            foreground_color=(1, 1, 0, 1),
+            cursor_color=(1, 1, 0, 1)
+        )
+        self.rotation_input.bind(text=self.on_rotation_input)
+        
+        # Up/Down buttons
+        btn_up = NutNeon(text="^", size_hint_x=0.08, bg_color=(0.15, 0.15, 0.25, 0.9), border_color=(0.5, 0.5, 1, 1))
+        btn_down = NutNeon(text="v", size_hint_x=0.08, bg_color=(0.15, 0.15, 0.25, 0.9), border_color=(0.5, 0.5, 1, 1))
+        btn_up.bind(on_press=lambda x: self.adjust_rotation(10))
+        btn_down.bind(on_press=lambda x: self.adjust_rotation(-10))
+        
+        # Degree label
+        self.rotation_value_label = Label(text="[color=ffff00][b]0°[/b][/color]", markup=True, size_hint_x=0.12, font_size='16sp')
+        
+        # Reset button
+        reset_btn = NutNeon(text="RESET", size_hint_x=0.12, bg_color=(0.5, 0.1, 0.1, 0.8), border_color=(1, 0.3, 0.3, 1))
         reset_btn.bind(on_press=self.on_reset_all)
+        
         self.rotation_panel.add_widget(rotation_label)
-        self.rotation_panel.add_widget(self.rotation_slider)
+        self.rotation_panel.add_widget(btn_down)
+        self.rotation_panel.add_widget(self.rotation_input)
+        self.rotation_panel.add_widget(btn_up)
         self.rotation_panel.add_widget(self.rotation_value_label)
         self.rotation_panel.add_widget(reset_btn)
         self.main_layout.add_widget(self.rotation_panel)
@@ -143,6 +180,7 @@ class LongBuildaApp(App):
 
         self.main_layout.add_widget(self.btn_panel)
         self.root_container.add_widget(self.main_layout)
+        
         self.view_zone.bind(size=self._sync, pos=self._sync)
         Window.bind(on_key_down=self._on_keyboard)
         Window.bind(on_mouse_scroll=self._on_mouse_scroll)
@@ -158,6 +196,15 @@ class LongBuildaApp(App):
         # Callback khi app quay lại
         pass
 
+    def on_stop(self):
+        """Cleanup temp file khi thoát app"""
+        try:
+            if os.path.exists(self.preview_temp):
+                os.remove(self.preview_temp)
+        except:
+            pass
+        return True
+
     def show_welcome_popup(self, *args):
         content = BoxLayout(orientation='vertical', padding=20, spacing=15)
         content.add_widget(Label(text="Tool mod này hoàn toàn [b][color=00ff00]FREE[/color][/b],\ncó thể tải nó tại telegram:\n[color=00ffff]@freetoolmod[/color]", markup=True, halign='center', font_size='16sp'))
@@ -169,7 +216,8 @@ class LongBuildaApp(App):
 
     def _sync(self, *args):
         if self.game_res <= 0: return
-        side = min(self.view_zone.width * 0.85, self.view_zone.height * 0.85)
+        # Tăng khung thêm 20px
+        side = min(self.view_zone.width * 0.85, self.view_zone.height * 0.85) + 20
         px, py = self.view_zone.center_x - side/2, self.view_zone.center_y - side/2
         self.frame_bg.size = (side, side)
         self.frame_bg.pos = (px, py)
@@ -177,22 +225,77 @@ class LongBuildaApp(App):
         self._refresh_img()
 
     def _refresh_img(self):
-        if not self.img_display.source or self.game_res <= 0: return
-        self.img_display.opacity = 1
+        """Refresh image display with rotation preview"""
+        if not self.path_mod or self.game_res <= 0: 
+            return
+        
+        try:
+            # Load ảnh gốc
+            img = Image.open(self.path_mod).convert("RGBA")
+            
+            # Apply rotation nếu có
+            if self.config_data['rotation'] != 0:
+                img = img.rotate(
+                    -self.config_data['rotation'],  # Negative = CCW
+                    expand=True, 
+                    resample=Image.Resampling.BILINEAR,
+                    fillcolor=(0, 0, 0, 0)  # Transparent
+                )
+            
+            # Save to temp file for preview
+            img.save(self.preview_temp, "PNG")
+            img.close()
+            
+            # Load vào Kivy
+            self.img_display.source = self.preview_temp
+            self.img_display.reload()
+            self.img_display.opacity = 1
+            
+        except Exception as e:
+            print(f"Preview error: {e}")
+            return
+        
+        # Texture filtering
         if self.img_display.texture:
             self.img_display.texture.min_filter = 'nearest'
             self.img_display.texture.mag_filter = 'nearest'
+        
+        # Positioning với size calculation
         ratio = self.frame_bg.size[0] / self.game_res
         zoom = self.config_data['zoom'] / 100
         dw = self.frame_bg.size[0] * zoom
+        
         try:
-            with Image.open(self.path_mod) as m:
+            with Image.open(self.preview_temp) as m:
                 dh = dw * (m.height / m.width)
-        except: dh = dw
+        except: 
+            dh = dw
+        
         self.img_display.size_hint = (None, None)
         self.img_display.size = (dw, dh)
         self.img_display.center_x = self.frame_bg.pos[0] + (self.frame_bg.size[0]/2) + (self.config_data['off_x'] * ratio)
         self.img_display.center_y = self.frame_bg.pos[1] + (self.frame_bg.size[1]/2) - (self.config_data['off_y'] * ratio)
+        
+        # Kiểm tra ảnh vượt khung → giảm opacity xuống 30%
+        img_bounds = (
+            self.img_display.x,
+            self.img_display.y,
+            self.img_display.right,
+            self.img_display.top
+        )
+        frame_bounds = (
+            self.frame_bg.pos[0],
+            self.frame_bg.pos[1],
+            self.frame_bg.pos[0] + self.frame_bg.size[0],
+            self.frame_bg.pos[1] + self.frame_bg.size[1]
+        )
+        
+        # Nếu ảnh vượt ra ngoài khung
+        if (img_bounds[0] < frame_bounds[0] or img_bounds[1] < frame_bounds[1] or
+            img_bounds[2] > frame_bounds[2] or img_bounds[3] > frame_bounds[3]):
+            self.img_display.opacity = 0.3  # 30%
+        else:
+            self.img_display.opacity = 1.0  # 100%
 
     def _update_info(self):
         if self.path_mod and self.game_res > 0:
@@ -299,16 +402,49 @@ class LongBuildaApp(App):
         elif cmd == 'd': self.config_data['off_x'] += buoc
         self._refresh_img()
 
+    def on_rotation_input(self, instance, value):
+        """Handle TextInput rotation value change"""
+        try:
+            rotation = int(value) if value else 0
+            # Clamp to 0-360
+            rotation = max(0, min(360, rotation))
+            self.config_data['rotation'] = rotation
+            self.rotation_value_label.text = f"[color=ffff00][b]{rotation}°[/b][/color]"
+            
+            # Debounce refresh - tăng lên 0.25s để giảm lag
+            Clock.unschedule(self._delayed_refresh)
+            Clock.schedule_once(self._delayed_refresh, 0.25)
+            
+            self._update_info()
+        except ValueError:
+            pass
+    
+    def adjust_rotation(self, delta):
+        """Adjust rotation by delta (for up/down buttons)"""
+        current = self.config_data['rotation']
+        new_val = (current + delta) % 361  # Wrap 0-360
+        self.rotation_input.text = str(new_val)
+    
     def on_rotation_change(self, instance, value):
+        """Legacy slider handler (not used anymore)"""
         self.config_data['rotation'] = int(value)
         self.rotation_value_label.text = f"[color=ffff00][b]{int(value)}°[/b][/color]"
+        
+        # Debounce refresh
+        Clock.unschedule(self._delayed_refresh)
+        Clock.schedule_once(self._delayed_refresh, 0.25)
+        
         self._update_info()
+
+    def _delayed_refresh(self, dt):
+        """Delayed refresh to prevent lag when dragging slider"""
+        self._refresh_img()
 
     def on_reset_all(self, instance):
         if self.game_res <= 0:
             return
         self.config_data = {"zoom": 100, "off_x": 0, "off_y": 0, "rotation": 0}
-        self.rotation_slider.value = 0
+        self.rotation_input.text = '0'  # Reset TextInput
         self._refresh_img()
         self._update_info()
         self.main_msg.text = "[color=00ff00][b]ĐÃ RESET VỀ MẶC ĐỊNH![/b][/color]"
@@ -352,9 +488,9 @@ class LongBuildaApp(App):
             subprocess.run(f"su -c 'cp -f {TEMP_FILE} {self.target_path} && sync'", shell=True)
             self.paste_count += 1
             if self.paste_count == 1:
-                self.main_msg.text = "[color=00ff00][b]ĐÃ DÁN XONG![/b][/color]\n[size=12sp]Vào game bấm [b]↩️ Quay lại[/b] để hiện ảnh.[/size]"
+                self.main_msg.text = "[color=00ff00][b]ĐÃ DÁN XONG![/b][/color]\n[size=12sp]Vào game bấm [b]< QUAY LẠI[/b] để hiện ảnh.[/size]"
             else:
-                self.main_msg.text = "[color=00ff00][b]ĐÃ CẬP NHẬT![/b][/color]\n[size=12sp]Vào game bấm [b]↪️ Làm lại[/b] rồi bấm [b]↩️ Quay lại[/b] để cập nhật.[/size]"
+                self.main_msg.text = "[color=00ff00][b]ĐÃ CẬP NHẬT![/b][/color]\n[size=12sp]Vào game bấm [b]LÀM LẠI[/b] rồi bấm [b]< QUAY LẠI[/b] để cập nhật.[/size]"
         except Exception as e: self.main_msg.text = f"[color=ff3333]LỖI: {str(e)[:15]}[/color]"
 
 if __name__ == '__main__':
